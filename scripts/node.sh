@@ -4,8 +4,8 @@
 
 # set -euxo pipefail
 
-# Create the .conf file to load the modules at bootup
-cat <<EOF | sudo tee /etc/modules-load.d/crio.conf
+# Load the necessary modules for Containerd:
+cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
 overlay
 br_netfilter
 EOF
@@ -13,7 +13,7 @@ EOF
 sudo modprobe overlay
 sudo modprobe br_netfilter
 
-# Set up required sysctl params, these persist across reboots.
+# Setup the required kernel parameters:
 cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.ipv4.ip_forward                 = 1
@@ -43,27 +43,40 @@ sudo apt-get install -y \
     curl \
     gnupg \
     apt-transport-https \
-    lsb-release
+    lsb-release \
+    jq
 
 # Install containerd and the latest versions of kubernetes components
-sudo apt-get install -qy containerd.io kubelet kubeadm kubectl
+sudo apt-get install -y containerd.io kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl containerd.io
 
+# Enable CRI plugin.
 sudo sed -i 's/disabled_plugins/\#disabled_plugins/' /etc/containerd/config.toml
 sudo systemctl restart containerd
+
+# Configure containerd
+# sudo mkdir -p /etc/containerd
+# containerd config default | sudo tee /etc/containerd/config.toml
+# sudo systemctl restart containerd
 
 # Disable swap in order for the kubelet to work properly.
 sudo swapoff -a
 sudo cp /etc/fstab /etc/fstab.bak
 sudo sed -i 's/\/swap/\#\/swap/' /etc/fstab
 
-# Add current node to kubernetes cluster
+# Join current node to kubernetes cluster
 config_path="/vagrant/configs/"
+
+mkdir -p /home/vagrant/.kube
+sudo cp -i $config_path/config /home/vagrant/.kube/config
+sudo chown vagrant:vagrant -R /home/vagrant/.kube/
+
 sudo /bin/bash $config_path/join.sh -v
+kubectl label node $(hostname -s) node-role.kubernetes.io/worker=worker
 
 # Install bash auto-completion
 sudo apt-get install bash-completion
-kubectl completion bash
+kubectl completion bash &>/dev/null
 echo "source /usr/share/bash-completion/bash_completion" | sudo tee -a ~/.bashrc
 echo "source <(kubectl completion bash)" | sudo tee -a ~/.bashrc
 echo 'alias k=kubectl' | sudo tee -a ~/.bashrc
