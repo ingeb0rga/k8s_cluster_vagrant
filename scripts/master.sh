@@ -76,6 +76,9 @@ mkdir -p /home/vagrant/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
 sudo chown vagrant:vagrant -R /home/vagrant/.kube/
 
+# Untaint master node
+kubectl taint nodes $HOSTNAME node-role.kubernetes.io/control-plane:NoSchedule-
+
 # Create cluster token
 config_path="/vagrant/configs/"
 
