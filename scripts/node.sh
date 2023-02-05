@@ -50,9 +50,6 @@ sudo apt-get install -y \
 sudo apt-get install -y containerd.io kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl containerd.io
 
-# Add vagrant user to docker group
-sudo usermod -aG docker vagrant
-
 # Enable CRI plugin.
 sudo sed -i 's/disabled_plugins/\#disabled_plugins/' /etc/containerd/config.toml
 sudo systemctl restart containerd
