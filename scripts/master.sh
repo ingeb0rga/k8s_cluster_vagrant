@@ -94,6 +94,10 @@ kubeadm token create --print-join-command > $config_path/join.sh
 # Install Flunnel Network Plugin
 kubectl apply -f https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml
 
+# Install Local Path Provisioner
+# https://github.com/rancher/local-path-provisioner
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.24/deploy/local-path-storage.yaml
+
 # Install bash auto-completion
 sudo apt-get install bash-completion
 kubectl completion bash &>/dev/null
