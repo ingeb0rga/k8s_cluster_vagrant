@@ -69,6 +69,10 @@ sudo chown vagrant:vagrant -R /home/vagrant/.kube/
 sudo /bin/bash $config_path/join.sh -v
 kubectl label node $(hostname -s) node-role.kubernetes.io/worker=worker
 
+# Install metrics server
+# https://github.com/kubernetes-sigs/metrics-server
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
 # Install bash auto-completion
 sudo apt-get install bash-completion
 kubectl completion bash &>/dev/null
